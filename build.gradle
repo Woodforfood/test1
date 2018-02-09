@@ -7,11 +7,25 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
 }
 task changeVersion << {
-    ant.replace(file: "gradle.properties", token: "1.0.1", value: "1.0.2")
+    def versionFile = new File("$rootDir/gradle.properties")
+        String versionNumber 
+        versionFile.withReader { reader ->
+           versionNumber = reader.readLine()
+        }
+        def (major, minor, patch) = versionNumber.tokenize('.')
+        def temp = patch.toInteger() + 1
+        versionNumber = "${major}.${minor}.${temp}"
+        versionFile.withWriter { writer ->
+           writer.println versionNumber
+        } 
 }
 task addVersion << {
-    new File("E:/Git-steps/gradleSample/build/resources/main/greeting.txt") << '\n' <<
-    new File("E:/Git-steps/gradleSample/gradle.properties").text
+    def dst = new File("$buildDir/resources/main/greeting.txt")
+    new File("$rootDir/gradle.properties").eachLine { line ->
+        if (line.contains('version')) {
+            dst << "\r\n" << line 
+        }
+    }
 }
 addVersion.shouldRunAfter processResources
 war.dependsOn addVersion
